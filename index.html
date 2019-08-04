@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <title>Document</title>
+
+    <style>
+        .active {
+            background-color: rgba(46, 84, 134, 0.2);
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <pre id="Expression" style="font-size: 40px; padding: 40px"></pre>
+    </div>
+
+    <input placeholder="Enter The Expression" id="inputfield" autofocus>
+</body>
+
+</html>
+
+<script>
+    var pre;
+
+    var socket = io();
+
+    socket.on("HTMLExpression", function (data) {
+        $("#Expression").html(data.html);
+        pre = document.getElementById("Expression");
+    });
+
+    $("#inputfield").keypress(function (e) {
+        var keycode = e.keycode || e.which;
+        socket.emit("RequestAddCharacter", {
+            keycode: keycode
+        });
+    });
+
+    $("#inputfield").keydown(function (e) {
+        var keycode = e.keycode || e.which;
+        if (keycode == 8) {//back space
+            socket.emit("RequestDeleteCharacter");
+        }
+    });
+
+    socket.on("ResponseDeleteCharacter", function (data) {
+        pre.children[data.index].classList = [];
+        pre.children[data.index - 1].classList = [];
+        pre.children[data.index - 1].classList.add("active");
+    });
+
+    socket.on("ResponseAddCharacter", function (data) {
+        pre.children[data.index].classList = [];
+        if (data.valid)
+            pre.children[data.index].classList.add("correct");
+        else
+            pre.children[data.index].classList.add("incorrect");
+        if (data.index + 1 < data.expreesionsize)
+            pre.children[data.index + 1].classList.add("active");
+    });
+
+</script>
